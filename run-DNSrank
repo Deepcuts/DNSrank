@@ -70,7 +70,7 @@ worstqt=100
 
 
 # Set script git home
-githome="https://github.org/Deepcuts/DNSrank"
+githome="https://github.com/Deepcuts/DNSrank"
 
 
 # Set colors for various messages marking,
