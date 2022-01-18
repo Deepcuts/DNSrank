@@ -1,6 +1,6 @@
 # DNSrank
 
-A DNS benchmarking/ranking script
+A Domain Name System server benchmarking/ranking script
 ![Preview](./preview/DNSrank-screen1.jpg)
 
 # Requirements
