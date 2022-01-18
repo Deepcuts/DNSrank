@@ -1,0 +1,9 @@
+127.0.0.1#localhost#53
+1.1.1.1#CloudFlare#53
+8.8.8.8#Google#53
+9.9.9.9#Quad9#53
+208.67.222.222#OpenDNS#53
+84.200.69.80#DNSWatch#53
+77.88.8.88#Yandex#53
+8.26.56.26#Comodo#53
+64.6.64.6#Verisign#53

@@ -1,0 +1,311 @@
+#!/bin/bash
+
+#______________________________________________#
+#   _____  _   _  _____                 _      #
+#  |  __ \| \ | |/ ____|               | |     #
+#  | |  | |  \| | (___  _ __ __ _ _ __ | | __  #
+#  | |  | | . ` |\___ \| '__/ _` | '_ \| |/ /  #
+#  | |__| | |\  |____) | | | (_| | | | |   <   #
+#  |_____/|_| \_|_____/|_|  \__,_|_| |_|_|\_\  #
+# 				               #  
+#  DNSrank version 1.0/18.Jan.2022	       #
+#  License: GPL-3.0			       #
+#  Github: https://github.com/Deepcuts/DNSrank #
+#  razvan.constantin@gmail.com	       	       #	
+#______________________________________________#
+
+
+
+
+
+
+#------------------------------------------------------------------------------------------------------------------------
+#					Edit test parameters below							#
+#------------------------------------------------------------------------------------------------------------------------
+
+# File containing DNS servers. One record per line. Example: 1.1.1.1#CloudFlare#53 ( IP#ShortName#Port )
+# Only use IP and not fqdn for DNS servers. Non IP values will be skipped.
+# hint: edit the actual file to add/modify DNS servers.
+ServersFile=servers.txt
+
+# File containing the list of domains. One domain per line. Example: 1,example1.com
+# Bundled domains source: https://statvoo.com/dl/top-1million-sites.csv.zip
+# hint: edit the actual file to add/modify domain names.
+DomainsFile=domains.txt
+
+# How many domains to test from $DomainsFile?. Script comes with top 1 milion domains in format 1,example1.com where 1 is the rank. Testing all bundled domains is not advised.
+# Recommended values: 100 (quick test, not very conclusive), 1000 (good balance, pretty conclusive) or 10000 (very good coverage, conclusive). Test with over 10000 domains at your own peril.
+# Default 1000
+DomainsTestCount=1000
+
+# Sets the timeout for a DNS query in seconds. Setting this to a much larger value will greatly increase total testing time with no real benefit. Keep it around 2 seconds.
+# Default 2
+querytime=2
+
+# How thorough to test icmp latency and packet loss for each server in seconds. Increase to 10 or more for better rtt average calculation, but each test will take longer.
+# Default 4
+pingtime=4
+
+# Query response times in ms without decimals for best and worst ranking. Example 2 for best performance and 100 for worst performance.
+# Default 2 and 100 
+bestqt=10
+worstqt=100
+
+#------------------------------------------------------------------------------------------------------------------------
+#		Edit below only if you know what you are doing and you want to modify the script 			#
+#------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Set script git home
+githome="https://github.org/DNSrank"
+
+
+# Set colors for various messages marking,
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+RED=$(tput setaf 1)
+normal=$(tput sgr0)
+
+# Checking if required files exist.
+if [ ! -f "$DomainsFile" ]; then
+    printf "${RED}$DomainsFile file not found. Download it from $githome or create it yourself and add some domains in format 1,example1.com. Script halted! ${normal}"
+    exit 1
+fi
+if [ ! -f "$ServersFile" ]; then
+    printf "${RED}$ServersFile file not found. Download it from $githome or create it yourself and add some servers in format 1.1.1.1#CloudFlare#53. Script halted! ${normal}"
+    exit 1
+fi
+
+# Checking if required commands are available.
+if ! [ -x "$(command -v bc)" ]; then
+  printf "${RED}Error: bc is not installed. Script halted! ${normal}"
+  exit 1
+fi
+if ! [ -x "$(command -v dig)" ]; then
+  printf "${RED}Error: dig is not installed. Script halted! ${normal}"
+  exit 1
+fi
+if ! [ -x "$(command -v traceroute)" ]; then
+  printf "${RED}Error: traceroute is not installed. Script halted! ${normal}"
+  exit 1
+fi
+if ! [ -x "$(command -v ping)" ]; then
+  printf "${RED}Error: ping is not installed. Script halted! ${normal}"
+  exit 1
+fi
+if ! [ -x "$(command -v curl)" ]; then
+  printf "${RED}Error: curl is not installed. Script halted! ${normal}"
+  exit 1
+fi
+if ! [ -x "$(command -v getent)" ]; then
+  printf "${RED}Error: getent is not installed. Script halted! ${normal}"
+  exit 1
+fi
+
+# Zeroing required variables just in case.
+totalservers=""
+totaldomains=""
+badservers=""
+testedservers=""
+totalservers=""
+d1=""
+s1=""
+ISP=""
+ISPCI=""
+ISPCO=""
+
+# Build domains list to test, taking into consideration $DomainsTestCount and cutting the rank number and ,
+Domains=$(cat $DomainsFile |head -n $DomainsTestCount| cut -d "," -f2-)
+
+# Build servers list to test.
+Servers=$(cat "$ServersFile") 
+
+# Counting final number of domains to test.
+for d1 in $Domains; do
+    totaldomains=$((totaldomains + 1))
+done
+
+# Counting number of DNS servers to use.
+for s1 in $Servers; do
+    totalservers=$((totalservers + 1))
+done
+
+# Check if at least one DNS server has been setup and quit if none found.
+if [ $totalservers = 0 ]; then
+    echo ""
+    printf "${RED}No DNS servers defined. Edit $ServersFile file and add at least one DNS server in format ShortName#ServerIP#Port ${normal}"
+    exit 1
+fi
+# Check if at least one domain has been setup and quit if none found.
+if [ $totaldomains = 0 ]; then
+    echo ""
+    printf "${RED}No domains defined. Edit $DomainsFile file  and add add least one domain in format 1,example1.com ${normal}"
+    exit 1
+fi
+
+# Some grammar fixes.
+if [ $totalservers -eq 1 ]; then
+    gservers="server"
+    ghas="has"
+fi
+if [ $totalservers -ge 2 ]; then
+    gservers="servers"
+    ghas="have"
+fi
+if [ $totaldomains -eq 1 ]; then
+    gdomains="domain"
+fi
+if [ $totaldomains -ge 2 ]; then
+    gdomains="domains"
+fi
+
+echo ""
+printf "\n%s" "Analyzing DNS performance using $totaldomains $gdomains and $totalservers DNS $gservers."
+printf "\n%s" "Parameters: $querytime seconds query timeout and $pingtime seconds latency test/server."
+printf "\n%s" "Legend: average query time ${GREEN}under $bestqt ms ${normal}(Very good) |${YELLOW} between $bestqt ms and $worstqt ms ${normal}(Acceptable) |${RED} above $worstqt ms or not responding ${normal}(Not Recommended)."
+
+# Try to get current ISP via ipinfo.io/org. Test if domain is blocked or not resolving.
+testipinfo=`getent hosts ipinfo.io | awk '{ print $1 }'`
+if [ "$testipinfo" != "::" ]; then
+    ISP=`curl -s ipinfo.io/org`
+    if [ $? -eq 0 ]; then
+	:
+    else
+	ISP="Unknown"
+    fi
+    ISPCI=`curl -s ipinfo.io/city`
+    if [ $? -eq 0 ]; then
+	:
+    else
+	ISPCI="Unknown"
+    fi
+    ISPCO=`curl -s ipinfo.io/country`
+    if [ $? -eq 0 ]; then
+	:
+    else
+	ISPCO="Unknown"
+    fi
+else
+    ISP="request blocked or info unavailable"
+    ISPCI=""
+    ISPCO=""
+fi
+printf "\n%s\n" "Testing from: $ISP | $ISPCI $ISPCO"
+
+# Main loop start.
+for s1 in $Servers; do
+    # Get DNS server IP.
+    sip=${s1%%#*}
+    # Get DNS server ShortName.
+    sname=${s1#*#}
+    # Get DNS server port.
+    sport=${s1##*#}
+    # Print each DNS server ShortName.
+    printf "\n%22s%s:" $sname
+    if [[ $sip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+	:
+    else
+	printf "  ${RED}Server is not an IP. Skipping!${normal}"
+	badservers=$((badservers + 1))
+	continue
+    fi
+    # Test each DNS server and skip it if packet loss is 100%.
+    pktloss=`ping -W 2 -i 1 -n -c $pingtime $sip | grep -oP '\d+(?=% packet loss)'`
+    if [ "$pktloss" = "100" ]; then 
+	printf "  ${RED}Server not responding to icmp requests. Skipping!${normal}"
+	badservers=$((badservers + 1))
+	continue 
+    fi
+    # Test each DNS server and skip it if unable to query some hopefully always online domains.
+    testdns=`dig -p $sport +tries=1 +retry=1 +time=1 @$sip +short google.com apple.com microsoft.com`
+    if [ $? -eq 0 ]; then
+	:
+    else
+	printf "  ${RED}Server not responding to DNS queries. Skipping!${normal}"
+	badservers=$((badservers + 1))
+        continue
+    fi
+    # Test each DNS server and skip it if recursion is not available
+    testdns1=`dig -p $sport +tries=1 +retry=1 +time=1 @$sip google.com apple.com microsoft.com | grep "WARNING: recursion requested but not available" `
+    if [ $? -eq 0 ]; then
+	printf "  ${RED}Server reporting that recursion is not available. Skipping!${normal}"
+	badservers=$((badservers + 1))
+        continue
+    else
+	:
+    fi
+    # Find max hops with traceroute.
+    troute=`traceroute -n -I "$sip" 2>/dev/null | tail -1 | awk '{print $1}'`
+    # Find average rtt with ping.
+    rttavg=`ping -W 2 -i 1 -n -c $pingtime $sip | tail -1 | awk '{print $4}' | cut -d '/' -f 2`
+    dnsversion=`dig version.bind txt chaos @$sip | grep "version.bind" | tail -n1 | cut -d T -f 3- | xargs`
+    [ -z "$dnsversion" ] && dnsversion=Unknown
+    ftime=0
+    # Loop all domains.
+    for d1 in $Domains; do
+	# Query each server and look for Query time value in reponse.
+        ttime=`dig -p $sport +tries=1 +retry=1 +time=$querytime +stats @$sip $d1 | grep "Query time:" | cut -d : -f 2- | cut -d " " -f 2`
+        if [ -z "$ttime" ]; then
+	    ttime=1000
+        elif [ "x$ttime" = "x0" ]; then
+	    ttime=1
+	fi
+        ftime=$((ftime + ttime))
+    done
+    # Do some math for each DNS server final query average time.
+    avg=`bc -lq <<< "scale=2; $ftime/$totaldomains"`
+    # Print statistics for each DNS server
+    # Mark servers with a quesry time lower than $bestqt with a different color.
+    if (( $(echo "$avg < $bestqt" |bc -l) )); then
+	printf "%8s%s" ${GREEN} $avg " ms (average) | Distance to server: $troute hops | icmp rtt: $rttavg ms (average) | packet loss: $pktloss% | version: $dnsversion ${normal}"
+	continue
+    fi
+    # Mark servers with a query time higher than $worstqt with a different color.
+    if (( $(echo "$avg > $worstqt" |bc -l) )); then
+	printf "%6s%s" ${RED} $avg " ms (average) | Distance to server: $troute hops | icmp rtt: $rttavg ms (average) | packet loss: $pktloss% | version: $dnsversion ${normal}"
+	continue
+    fi
+    # Mark servers with a query time between $bestqt and $worstqt with a different color.
+    if (( $(echo "$avg > $bestqt" |bc -l) && $(echo "$avg < $worstqt" |bc -l ))); then
+	printf "%7s%s" ${YELLOW} $avg " ms (average) | Distance to server: $troute hops | icmp rtt: $rttavg ms (average) | packet loss: $pktloss% | version: $dnsversion ${normal}"
+    fi
+done
+# Main loop done.
+echo ""
+if [ $badservers -ge 1 ]; then
+    testedservers=$((totalservers - badservers))
+    # Some grammar fixes.
+    if [ $testedservers -eq 1 ]; then
+	g1servers="server"
+	g1has="has"
+    fi
+    if [ $testedservers -ge 2 ]; then
+	g1servers="servers"
+	g1has="have"
+    fi
+    # Notify that not even one server was tested.
+    if [ $testedservers -eq 0 ]; then
+	printf "\n%s\n" "Not even one server responded to DNS queries. Check your network connection or the configured DNS servers."
+	exit 1
+    fi
+    # Notiy that some servers were not reachable while others were.
+    printf "\n%s" "$badservers out of $totalservers $gservers failed to respond to DNS queries. $testedservers $g1servers responded to queries and $g1has been tested."
+else
+    # Notify that all configured servers were reachable and tested.
+    printf "\n%s" "$totalservers $gservers responded to queries and $ghas been tested."
+fi
+echo ""
+exit 0;
