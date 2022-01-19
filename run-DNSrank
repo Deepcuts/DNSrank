@@ -28,7 +28,7 @@
 # hint: edit the actual file to add/modify DNS servers.
 ServersFile=servers.txt
 
-# File containing the list of domains. One domain per line. Example: 1,example1.com
+# File containing the list of domains. One domain per line. Example: 1,example1.com ( rank#domain.tld )
 # Bundled domains source: https://statvoo.com/dl/top-1million-sites.csv.zip
 # hint: edit the actual file to add/modify domain names.
 DomainsFile=domains.txt
@@ -72,8 +72,7 @@ worstqt=100
 # Set script git home
 githome="https://github.com/Deepcuts/DNSrank"
 
-
-# Set colors for various messages marking,
+# Set colors for various messages marking.
 GREEN=$(tput setaf 2)
 YELLOW=$(tput setaf 3)
 RED=$(tput setaf 1)
@@ -172,6 +171,7 @@ if [ $totaldomains -ge 2 ]; then
     gdomains="domains"
 fi
 
+# Display some test info, parameters and legend.
 echo ""
 printf "\n%s" "Analyzing DNS performance using $totaldomains $gdomains and $totalservers DNS $gservers."
 printf "\n%s" "Parameters: $querytime seconds query timeout and $pingtime seconds latency test/server."
@@ -215,6 +215,7 @@ for s1 in $Servers; do
     sport=${s1##*#}
     # Print each DNS server ShortName.
     printf "\n%22s%s:" $sname
+    # Test each DNS server if value is an IP and skip it if it is not.
     if [[ $sip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 	:
     else
@@ -238,7 +239,7 @@ for s1 in $Servers; do
 	badservers=$((badservers + 1))
         continue
     fi
-    # Test each DNS server and skip it if recursion is not available
+    # Test each DNS server and skip it if recursion is not available.
     testdns1=`dig -p $sport +tries=1 +retry=1 +time=1 @$sip google.com apple.com microsoft.com | grep "WARNING: recursion requested but not available" `
     if [ $? -eq 0 ]; then
 	printf "  ${RED}Server reporting that recursion is not available. Skipping!${normal}"
@@ -247,9 +248,9 @@ for s1 in $Servers; do
     else
 	:
     fi
-    # Find max hops with traceroute.
+    # Find max hops to each DNS server with traceroute.
     troute=`traceroute -n -I "$sip" 2>/dev/null | tail -1 | awk '{print $1}'`
-    # Find average rtt with ping.
+    # Find average rtt to each DNS server with ping.
     rttavg=`ping -W 2 -i 1 -n -c $pingtime $sip | tail -1 | awk '{print $4}' | cut -d '/' -f 2`
     dnsversion=`dig version.bind txt chaos @$sip | grep "version.bind" | tail -n1 | cut -d T -f 3- | xargs`
     [ -z "$dnsversion" ] && dnsversion=Unknown
