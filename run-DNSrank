@@ -268,7 +268,7 @@ for s1 in $Servers; do
     # Do some math for each DNS server final query average time.
     avg=`bc -lq <<< "scale=2; $ftime/$totaldomains"`
     # Print statistics for each DNS server
-    # Mark servers with a quesry time lower than $bestqt with a different color.
+    # Mark servers with a query time lower than $bestqt with a different color.
     if (( $(echo "$avg < $bestqt" |bc -l) )); then
 	printf "%8s%s" ${GREEN} $avg " ms (average) | Distance to server: $troute hops | icmp rtt: $rttavg ms (average) | packet loss: $pktloss% | version: $dnsversion ${normal}"
 	continue
