@@ -194,7 +194,7 @@ if [ $totaldomains -ge 2 ]; then
 fi
 
 # Display some test info, parameters and legend.
-echo "4"
+printf "\n"
 printf "\n%s" "Analyzing DNS performance using $totaldomains $gdomains and $totalservers DNS $gservers."
 printf "\n%s" "Parameters: $querytime seconds query timeout and $pingtime seconds latency test/server."
 printf "\n%s" "Legend: average query time ${GREEN}under $bestqt ms ${normal}(Very good) |${YELLOW} between $bestqt ms and $worstqt ms ${normal}(Acceptable) |${RED} above $worstqt ms or not responding ${normal}(Not Recommended)."
