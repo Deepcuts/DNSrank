@@ -77,6 +77,7 @@ if [ $check4update = "true" ]; then
 	git reset --hard HEAD
 	git pull
 	chmod u+x run-DNSrank
+	$(basename $0) && exit
     fi
     if [ $needupdate = 0 ]; then
 	printf "No update found. \n"
@@ -202,21 +203,21 @@ testipinfo=`getent hosts ipinfo.io | awk '{ print $1 }'`
 if [ "$testipinfo" != "::" ]; then
     ISP=`curl -s ipinfo.io/org`
     if [ $? -eq 0 ]; then
-	:
+		:
     else
-	ISP="Unknown"
+		ISP="Unknown"
     fi
     ISPCI=`curl -s ipinfo.io/city`
     if [ $? -eq 0 ]; then
-	:
+		:
     else
-	ISPCI="Unknown"
+		ISPCI="Unknown"
     fi
-    ISPCO=`curl -s ipinfo.io/country`
+    	ISPCO=`curl -s ipinfo.io/country`
     if [ $? -eq 0 ]; then
-	:
+		:
     else
-	ISPCO="Unknown"
+		ISPCO="Unknown"
     fi
 else
     ISP="request blocked or info unavailable"
