@@ -80,37 +80,37 @@ normal=$(tput sgr0)
 
 # Checking if required files exist.
 if [ ! -f "$DomainsFile" ]; then
-    printf "${RED}$DomainsFile file not found. Download it from $githome or create it yourself and add some domains in format 1,example1.com. Script halted! ${normal}"
+    printf "${RED}$DomainsFile file not found. Download it from $githome or create it yourself and add some domains in format 1,example1.com. Script halted! ${normal} \n"
     exit 1
 fi
 if [ ! -f "$ServersFile" ]; then
-    printf "${RED}$ServersFile file not found. Download it from $githome or create it yourself and add some servers in format 1.1.1.1#CloudFlare#53. Script halted! ${normal}"
+    printf "${RED}$ServersFile file not found. Download it from $githome or create it yourself and add some servers in format 1.1.1.1#CloudFlare#53. Script halted! ${normal} \n"
     exit 1
 fi
 
 # Checking if required commands are available.
 if ! [ -x "$(command -v bc)" ]; then
-  printf "${RED}Error: bc is not installed. Script halted! ${normal}"
+  printf "${RED}Error: bc is not installed. Script halted! ${normal} \n"
   exit 1
 fi
 if ! [ -x "$(command -v dig)" ]; then
-  printf "${RED}Error: dig is not installed. Script halted! ${normal}"
+  printf "${RED}Error: dig is not installed. Script halted! ${normal} \n"
   exit 1
 fi
 if ! [ -x "$(command -v traceroute)" ]; then
-  printf "${RED}Error: traceroute is not installed. Script halted! ${normal}"
+  printf "${RED}Error: traceroute is not installed. Script halted! ${normal} \n"
   exit 1
 fi
 if ! [ -x "$(command -v ping)" ]; then
-  printf "${RED}Error: ping is not installed. Script halted! ${normal}"
+  printf "${RED}Error: ping is not installed. Script halted! ${normal} \n"
   exit 1
 fi
 if ! [ -x "$(command -v curl)" ]; then
-  printf "${RED}Error: curl is not installed. Script halted! ${normal}"
+  printf "${RED}Error: curl is not installed. Script halted! ${normal} \n"
   exit 1
 fi
 if ! [ -x "$(command -v getent)" ]; then
-  printf "${RED}Error: getent is not installed. Script halted! ${normal}"
+  printf "${RED}Error: getent is not installed. Script halted! ${normal} \n"
   exit 1
 fi
 
@@ -145,13 +145,13 @@ done
 # Check if at least one DNS server has been setup and quit if none found.
 if [ $totalservers = 0 ]; then
     echo ""
-    printf "${RED}No DNS servers defined. Edit $ServersFile file and add at least one DNS server in format ShortName#ServerIP#Port ${normal}"
+    printf "${RED}No DNS servers defined. Edit $ServersFile file and add at least one DNS server in format ShortName#ServerIP#Port ${normal} \n"
     exit 1
 fi
 # Check if at least one domain has been setup and quit if none found.
 if [ $totaldomains = 0 ]; then
     echo ""
-    printf "${RED}No domains defined. Edit $DomainsFile file and add add least one domain in format 1,example1.com ${normal}"
+    printf "${RED}No domains defined. Edit $DomainsFile file and add add least one domain in format 1,example1.com ${normal} \n"
     exit 1
 fi
 
@@ -299,14 +299,13 @@ if [ $badservers -ge 1 ]; then
     fi
     # Notify that not even one server was tested.
     if [ $testedservers -eq 0 ]; then
-	printf "\n%s\n" "Not even one server responded to DNS queries. Check your network connection or the configured DNS servers."
+	printf "\n%s\n" "Not even one server responded to DNS queries. Check your network connection or the configured DNS servers. \n"
 	exit 1
     fi
     # Notiy that some servers were not reachable while others were.
-    printf "\n%s" "$badservers out of $totalservers $gservers failed to respond to DNS queries. $testedservers $g1servers responded to queries and $g1has been tested."
+    printf "\n%s" "$badservers out of $totalservers $gservers failed to respond to DNS queries. $testedservers $g1servers responded to queries and $g1has been tested. \n"
 else
     # Notify that all configured servers were reachable and tested.
-    printf "\n%s" "$totalservers $gservers responded to queries and $ghas been tested."
+    printf "\n%s" "$totalservers $gservers responded to queries and $ghas been tested. \n"
 fi
-echo ""
 exit 0;
