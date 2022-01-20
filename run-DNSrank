@@ -52,6 +52,7 @@ bestqt=10
 worstqt=100
 
 # Enable checking for update. If enabled (true), the script will pull the latest version from github, overwriting any local modifications. If false, no update check or changes will be made.
+# Warning: all local modifications made, including #ServersFile and $DomainsFile will be overwritten if set to true! Backup your modifications or set to false.
 # Default true
 check4update=true
 
