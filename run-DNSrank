@@ -74,9 +74,10 @@ if [ $check4update = "true" ]; then
     sed 's/\// /g') | cut -f1) ] && needupdate=0 || needupdate=1
     if [ $needupdate = 1 ]; then
 	printf "Update found. Applying...\n"
-	git reset --hard HEAD
-	git pull
+	git reset --hard HEAD --quiet
+	git pull --quiet
 	chmod u+x run-DNSrank
+	printf "Restarting....\n"
 	./$(basename $0) && exit
     fi
     if [ $needupdate = 0 ]; then
@@ -193,7 +194,7 @@ if [ $totaldomains -ge 2 ]; then
 fi
 
 # Display some test info, parameters and legend.
-echo "3"
+echo "4"
 printf "\n%s" "Analyzing DNS performance using $totaldomains $gdomains and $totalservers DNS $gservers."
 printf "\n%s" "Parameters: $querytime seconds query timeout and $pingtime seconds latency test/server."
 printf "\n%s" "Legend: average query time ${GREEN}under $bestqt ms ${normal}(Very good) |${YELLOW} between $bestqt ms and $worstqt ms ${normal}(Acceptable) |${RED} above $worstqt ms or not responding ${normal}(Not Recommended)."
