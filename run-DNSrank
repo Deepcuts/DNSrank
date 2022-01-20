@@ -75,6 +75,7 @@ if [ $check4update = "true" ]; then
 	printf "Update found. Applying...\n"
 	git reset --hard HEAD
 	git pull
+	chmod u+x run-DNSrank
     fi
     if [ $needupdate = 0 ]; then
 	printf "No update found. \n"
