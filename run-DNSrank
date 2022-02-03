@@ -179,7 +179,7 @@ fi
 # Check if at least one domain has been setup and quit if none found.
 if [ $totaldomains = 0 ]; then
     echo ""
-    printf "${RED}No domains defined. Edit $DomainsFile file and add add least one domain in format 1,example1.com ${normal} \n"
+    printf "${RED}No domains defined. Edit $DomainsFile file and add add least one domain in format 1,example1.com ${normal}"
     exit 1
 fi
 
@@ -327,13 +327,13 @@ if [ $badservers -ge 1 ]; then
     fi
     # Notify that not even one server was tested.
     if [ $testedservers -eq 0 ]; then
-		printf "\n%s\n" "Not even one server responded to DNS queries. Check your network connection or the configured DNS servers. \n"
+		printf "\n%s\n" "Not even one server responded to DNS queries. Check your network connection or the configured DNS servers."
 		exit 1
     fi
     # Notiy that some servers were not reachable while others were.
-    printf "\n%s" "$badservers out of $totalservers $gservers failed to respond to DNS queries. $testedservers $g1servers responded to queries and $g1has been tested. \n"
+    printf "\n%s\n" "$badservers out of $totalservers $gservers failed to respond to DNS queries. $testedservers $g1servers responded to queries and $g1has been tested."
 else
     # Notify that all configured servers were reachable and tested.
-    printf "\n%s" "$totalservers $gservers responded to queries and $ghas been tested. \n"
+    printf "\n%s\n" "$totalservers $gservers responded to queries and $ghas been tested."
 fi
 exit 0;
