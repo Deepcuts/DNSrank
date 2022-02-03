@@ -143,11 +143,11 @@ if ! [ -x "$(command -v getent)" ]; then
 fi
 
 # Zeroing required variables just in case.
-totalservers=""
-totaldomains=""
-badservers=""
-testedservers=""
-totalservers=""
+totalservers=0
+totaldomains=0
+badservers=0
+testedservers=0
+totalservers=0
 d1=""
 s1=""
 ISP=""
